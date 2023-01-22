@@ -8,7 +8,7 @@ const fetch = require('node-fetch-commonjs')
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 const configuration = new Configuration({
-  apiKey: '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',
+  apiKey: 'API KEY',
 });
 const openai = new OpenAIApi(configuration);
 
