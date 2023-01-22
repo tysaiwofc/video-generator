@@ -2,11 +2,13 @@
 const { Configuration, OpenAIApi } = require("openai");
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
+let { getAudioUrl } = require("google-tts-api");
+let http = require('http');
 const fetch = require('node-fetch-commonjs')
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 const configuration = new Configuration({
-  apiKey: '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',
+  apiKey: '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',
 });
 const openai = new OpenAIApi(configuration);
 
@@ -14,19 +16,43 @@ const openai = new OpenAIApi(configuration);
 const generateImage = async (prompt) => {
     const response = await openai.createImage({
         prompt: prompt,
-        model: "image-alpha-001"
     });
     //console.log(response.data.data.url, response.data.data)
     return response.data.data[0].url;
 };
 
+function downloadAudio(url, dest) {
+    var file = fs.createWriteStream(dest);
+    http.get(url, function (response) {
+      response.pipe(file)
+    });
+  }
+
+const generateAudio = async (text, name) => {
+    let audioUrl = await getAudioUrl(text, {
+        lang: "pt-br",
+        slow: false,
+        host: 'http://translate.google.com',
+        timeout: 20000,
+    });
+    console.log(audioUrl)
+    downloadAudio(audioUrl, `./${name}.mp3`)
+}
+
 // Função para gerar um texto com o GPT-3
 const generateText = async (prompt) => {
     const response = await openai.createCompletion({
         prompt: prompt,
-        model: "text-davinci-002"
+        model: "text-davinci-003",
+        temperature: 0,
+        max_tokens: 200,
+        top_p: 1,
+        frequency_penalty: 0.5,
+        presence_penalty: 0,
     });
-    return response.data.choices[0].text;
+
+    console.log('Texto:   ' + response.data.choices[0].text)
+    return response.data.choices[0].text?.slice(0, 200);
 };
 
 // Função para criar um vídeo a partir de uma imagem e um texto
@@ -35,12 +61,14 @@ const createVideo = async (imageUrl, text) => {
     const imageData = await (await fetch(imageUrl)).buffer();
     fs.writeFileSync('image.jpg', imageData);
 
+
     // Cria um arquivo de texto com o texto gerado pelo GPT-3
-    fs.writeFileSync('text.txt', text);
+    fs.writeFileSync('text.txt', text?.slice(0, 25));
 
     // Usa o ffmpeg para criar um vídeo com a imagem e o texto
-    ffmpeg()
-        .input('image.jpg')
+    ffmpeg('image.jpg')
+        .loop(25)
+        .input('./audio.mp3')
         .input('text.txt')
         .complexFilter(
             [
@@ -51,26 +79,28 @@ const createVideo = async (imageUrl, text) => {
                         textfile: 'text.txt',
                         x: '(main_w/2-text_w/2)',
                         y: '(main_h/2-text_h/2)',
-                        fontsize: 24,
-                        fontcolor: 'white',
+                        fontsize: 40,
+                        fontcolor: 'red',
                         shadowcolor: 'black',
                         shadowx: 2,
                         shadowy: 2
                     }
-                }
-            ],
-            'overlay'
+                },
+            ]
         )
         .save('video.mp4')
         .on('end', function () {
             console.log('Vídeo criado com sucesso!');
-        });
+        }).on('progress', function(progress) {
+            console.log('Gerando video: ' + progress.currentFps + '%');
+          });
 };
 
 const generateVideo = async  (tema) => {
     const text = await generateText(tema);
     const image = await generateImage(tema);
-    const video = await createVideo(image, text)
+    await generateAudio(text, 'audio');
+    await createVideo(image, tema);
 
     return true
 }
