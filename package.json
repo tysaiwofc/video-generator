@@ -11,6 +11,8 @@
   "license": "ISC",
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "colors": "^1.4.0",
+    "discord.js": "^14.7.1",
     "dotenv": "^16.0.3",
     "ffmpeg": "^0.0.4",
     "fluent-ffmpeg": "^2.1.2",
@@ -18,10 +20,9 @@
     "google-auth-library": "^8.7.0",
     "google-tts-api": "^2.0.2",
     "googleapis": "^110.0.0",
-    "http": "^0.0.1-security",
     "node-fetch-commonjs": "^3.2.4",
     "openai": "^3.1.0",
+    "questions": "^0.0.6",
     "text-to-mp3": "^1.0.4",
-    "youtube-videos-uploader": "^2.0.9"
   }
 }
