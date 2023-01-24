@@ -6,7 +6,8 @@ const c = require('colors')
 let { getAudioUrl } = require("google-tts-api");
 let http = require('http');
 const fetch = require('node-fetch-commonjs')
-const { API_KEY } = require('../env.json')
+const { API_KEY } = require('../env.json');
+const robot = require("./youtube.js");
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 const configuration = new Configuration({
@@ -73,7 +74,6 @@ const createVideo = async (imageUrl, text) => {
     fs.writeFileSync('./files/image.jpg', imageData);
     console.log(c.bold('[ SERVER ] Imagem baixada!'))
 
-
     console.log(c.bold('[ SERVER ] Salvando texto...'))
     fs.writeFileSync('./files/text.txt', text?.slice(0, 25));
     console.log(c.bold('[ SERVER ] Texto salvo!'))
@@ -102,7 +102,6 @@ const createVideo = async (imageUrl, text) => {
         )
         .save('./files/video.mp4')
         .on('end', function () {
-            console.clear()
             console.log(c.green('VIDEO GERADO COM SUCESSO!'));
             fs.unlink("./files/text.txt", () => {
             });
@@ -111,7 +110,6 @@ const createVideo = async (imageUrl, text) => {
             fs.unlink("./files/image.jpg", () => {
             });
         }).on('progress', function(progress) {
-            console.clear()
             console.log(c.cyan(`TEMPO: ${progress.timemark.slice(0,8)}`));
           });
 };
@@ -120,7 +118,10 @@ const generateVideo = async  (tema) => {
     const text = await generateText(tema);
     const image = await generateImage(tema);
     await generateAudio(text, 'audio');
-    await createVideo(image, tema);
+    await createVideo(image, tema).then(() => {
+        robot(tema)
+    })
+    
 
     return true
 }
