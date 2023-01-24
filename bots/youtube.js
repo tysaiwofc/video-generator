@@ -116,7 +116,7 @@ async function youtubeUploader(tema) {
       requestBody: {
         snippet: {
           title: videoTitle,
-          description: videoDescription + ' este video é apenas um teste entao assita ok? por favor assita este video cara, mano que video top eu assistiria agora mano, super amei,,,',
+          description: videoDescription,
         },
         status: {
           privacyStatus: 'public'
@@ -127,7 +127,7 @@ async function youtubeUploader(tema) {
       }
     }
 
-    console.log('[ YOUTUBE ] Starting to upload the video to YouTube')
+    console.log('[ YOUTUBE ] Iniciando o upload...')
     const youtubeResponse = await youtube.videos.insert(requestParameters, {
       onProgress: onProgress
     })

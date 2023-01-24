@@ -1,19 +1,17 @@
 
-const { Configuration, OpenAIApi } = require("openai");
+const openai = require('../openai.js')
+  
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
+const questions = require('questions');
 const c = require('colors')
 let { getAudioUrl } = require("google-tts-api");
 let http = require('http');
 const fetch = require('node-fetch-commonjs')
-const { API_KEY } = require('../env.json');
+
 const robot = require("./youtube.js");
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
-const configuration = new Configuration({
-  apiKey: API_KEY,
-});
-const openai = new OpenAIApi(configuration);
 
 // Função para gerar uma imagem com o OpenAI
 const generateImage = async (prompt) => {
@@ -103,6 +101,9 @@ const createVideo = async (imageUrl, text) => {
         .save('./files/video.mp4')
         .on('end', function () {
             console.log(c.green('VIDEO GERADO COM SUCESSO!'));
+            questions.askOne({ info:'[ SERVER ] Enviar para o youtube?  (responda com sim) :' }, async function(result){
+                if(result === 'sim') robot(tema)
+            })
             fs.unlink("./files/text.txt", () => {
             });
             fs.unlink("./files/audio.mp3", () => {
@@ -118,12 +119,11 @@ const generateVideo = async  (tema) => {
     const text = await generateText(tema);
     const image = await generateImage(tema);
     await generateAudio(text, 'audio');
-    await createVideo(image, tema).then(() => {
-        robot(tema)
-    })
+    await createVideo(image, tema)
     
 
     return true
 }
 
 module.exports = generateVideo
+exports.openai = openai
